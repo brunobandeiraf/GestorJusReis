@@ -8,18 +8,39 @@ function MovimentacaoList({ movimentacoes = [] }) {
     );
   }
 
+  // Normaliza o campo de data (API retorna 'data', banco retorna 'data_movimentacao')
+  const normalized = movimentacoes.map((mov) => ({
+    ...mov,
+    _date: mov.data_movimentacao || mov.data || null,
+  }));
+
   // Sort by date descending (most recent first)
-  const sorted = [...movimentacoes].sort((a, b) => {
-    const dateA = new Date(a.data_movimentacao);
-    const dateB = new Date(b.data_movimentacao);
+  const sorted = [...normalized].sort((a, b) => {
+    const dateA = new Date(a._date || 0);
+    const dateB = new Date(b._date || 0);
     return dateB - dateA;
   });
 
+  // Agrupa movimentações consecutivas com mesmo nome na mesma data
+  const grouped = [];
+  for (const mov of sorted) {
+    const dateStr = formatDateShort(mov._date);
+    const last = grouped[grouped.length - 1];
+    if (last && last.nome === mov.nome && formatDateShort(last._date) === dateStr) {
+      last._count = (last._count || 1) + 1;
+    } else {
+      grouped.push({ ...mov, _count: 1 });
+    }
+  }
+
   return (
     <section style={styles.container}>
-      <h3 style={styles.title}>Movimentações</h3>
+      <h3 style={styles.title}>
+        Movimentações
+        <span style={styles.count}>({movimentacoes.length} total)</span>
+      </h3>
       <ol style={styles.list} role="list">
-        {sorted.map((mov, idx) => (
+        {grouped.map((mov, idx) => (
           <li
             key={mov.id || idx}
             style={{
@@ -28,17 +49,22 @@ function MovimentacaoList({ movimentacoes = [] }) {
             }}
           >
             <div style={styles.header}>
-              <time style={styles.date} dateTime={mov.data_movimentacao}>
-                {formatDate(mov.data_movimentacao)}
+              <time style={styles.date} dateTime={mov._date}>
+                {formatDate(mov._date)}
               </time>
               {mov.nova && (
                 <span style={styles.badge} aria-label="Nova movimentação">
                   Nova
                 </span>
               )}
+              {mov._count > 1 && (
+                <span style={styles.countBadge}>
+                  ×{mov._count}
+                </span>
+              )}
             </div>
             <p style={styles.nome}>{mov.nome}</p>
-            {mov.complemento && (
+            {mov.complemento && !isNumericOnly(mov.complemento) && (
               <p style={styles.complemento}>{mov.complemento}</p>
             )}
           </li>
@@ -48,10 +74,18 @@ function MovimentacaoList({ movimentacoes = [] }) {
   );
 }
 
+function isNumericOnly(str) {
+  if (!str) return false;
+  // Filtra complementos que são apenas números (códigos sem significado para o usuário)
+  return /^\d+([;\s]*\d+)*$/.test(str.trim());
+}
+
 function formatDate(dateStr) {
   if (!dateStr) return '—';
   try {
-    return new Date(dateStr).toLocaleDateString('pt-BR', {
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return '—';
+    return date.toLocaleDateString('pt-BR', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
@@ -60,6 +94,17 @@ function formatDate(dateStr) {
     });
   } catch {
     return dateStr;
+  }
+}
+
+function formatDateShort(dateStr) {
+  if (!dateStr) return '';
+  try {
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return '';
+    return date.toLocaleDateString('pt-BR');
+  } catch {
+    return '';
   }
 }
 
@@ -72,6 +117,14 @@ const styles = {
   title: {
     margin: '0 0 1rem 0',
     fontSize: '1.1rem',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+  },
+  count: {
+    fontSize: '0.8rem',
+    color: '#888',
+    fontWeight: '400',
   },
   empty: {
     color: '#666',
@@ -113,6 +166,15 @@ const styles = {
     fontSize: '0.65rem',
     fontWeight: '700',
     textTransform: 'uppercase',
+  },
+  countBadge: {
+    display: 'inline-block',
+    padding: '0.1rem 0.4rem',
+    backgroundColor: '#e0e0e0',
+    color: '#555',
+    borderRadius: '10px',
+    fontSize: '0.7rem',
+    fontWeight: '600',
   },
   nome: {
     margin: '0 0 0.25rem 0',
