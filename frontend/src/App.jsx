@@ -3,6 +3,7 @@ import { ProcessoProvider } from './context/ProcessoContext';
 import Dashboard from './pages/Dashboard';
 import ProcessoPage from './pages/ProcessoPage';
 import ConsultaPage from './pages/ConsultaPage';
+import BuscaCPFPage from './pages/BuscaCPFPage';
 
 function App() {
   return (
@@ -30,6 +31,15 @@ function App() {
             >
               Consulta Avulsa
             </NavLink>
+            <NavLink
+              to="/busca-cpf"
+              style={({ isActive }) => ({
+                ...styles.navLink,
+                ...(isActive ? styles.navLinkActive : {}),
+              })}
+            >
+              Busca por CPF
+            </NavLink>
           </nav>
         </header>
 
@@ -38,6 +48,7 @@ function App() {
             <Route path="/" element={<Dashboard />} />
             <Route path="/processo/:id" element={<ProcessoPage />} />
             <Route path="/consulta" element={<ConsultaPage />} />
+            <Route path="/busca-cpf" element={<BuscaCPFPage />} />
           </Routes>
         </main>
       </div>

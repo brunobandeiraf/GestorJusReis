@@ -50,8 +50,10 @@ function ProcessoList() {
                   {processo.classe && (
                     <span style={styles.classe}>{processo.classe}</span>
                   )}
-                  {processo.status && (
-                    <span style={styles.status}>{processo.status}</span>
+                  {processo.ultima_atualizacao && (
+                    <span style={styles.dataAtualizacao}>
+                      Última mov: {new Date(processo.ultima_atualizacao).toLocaleDateString('pt-BR')}
+                    </span>
                   )}
                 </div>
               </div>
@@ -142,9 +144,10 @@ const styles = {
   classe: {
     color: '#555',
   },
-  status: {
-    color: '#388e3c',
-    fontWeight: '500',
+  dataAtualizacao: {
+    color: '#666',
+    fontSize: '0.75rem',
+    fontStyle: 'italic',
   },
   removeBtn: {
     background: 'none',

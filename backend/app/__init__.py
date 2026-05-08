@@ -60,6 +60,27 @@ def _register_blueprints(app):
     from app.routes.health import health_bp
     app.register_blueprint(health_bp)
 
+    from app.routes.busca_cpf import busca_cpf_bp
+    app.register_blueprint(busca_cpf_bp)
+
+    # Initialize scraper registry and make it available to routes
+    _init_scraper_registry(app)
+
+
+def _init_scraper_registry(app):
+    """Initialize the scraper registry with available scrapers."""
+    from app.services.scraping.esaj_scraper import ESAJScraperTJSP
+    from app.services.scraping.rate_limiter import RateLimiter
+    from app.services.scraping.registry import ScraperRegistry
+
+    rate_limiter = RateLimiter(intervalo_minimo=2.0)
+    scraper_tjsp = ESAJScraperTJSP(rate_limiter)
+
+    registry = ScraperRegistry()
+    registry.registrar(scraper_tjsp)
+
+    app.config['SCRAPER_REGISTRY'] = registry
+
 
 def _register_cli_commands(app):
     """Register custom CLI commands with the Flask app."""

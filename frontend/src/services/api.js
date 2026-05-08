@@ -80,4 +80,12 @@ export function getTribunais() {
   return api.get('/tribunais');
 }
 
+export function buscarPorCPF(cpf, tribunal) {
+  return api.post('/busca-cpf', { cpf, tribunal });
+}
+
+export function getTribunaisBuscaCPF() {
+  return api.get('/busca-cpf/tribunais');
+}
+
 export default api;
